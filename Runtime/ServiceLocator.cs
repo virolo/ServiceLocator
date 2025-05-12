@@ -29,12 +29,35 @@ namespace xenxei
         public void Register<T>(Enum context, T service)
         {
             Type type = typeof(T);
+            
             if (!_registry.ContainsKey(type))
             {
                 _registry[type] = new Dictionary<Enum, object>();
             }
 
             _registry[type][context] = service;
+        }
+
+        public void Unregister<T>()
+        {
+            Unregister<T>(ServiceLocatorContext.General);
+        }
+
+        public void Unregister<T>(Enum context)
+        {
+            Type type = typeof(T);
+            
+            if (!_registry.ContainsKey(type) || !_registry[type].ContainsKey(context) || _registry[type][context] == null)
+            {
+                throw new Exception($"Cannot unregister service type {type} with context {context}");
+            }
+            
+            _registry[type].Remove(context);
+            
+            if (_registry[type].Count == 0)
+            {
+                _registry.Remove(type);
+            }
         }
 
         public T Resolve<T>()
@@ -45,6 +68,7 @@ namespace xenxei
         public T Resolve<T>(Enum context)
         {
             Type type = typeof(T);
+            
             if (_registry.ContainsKey(type) && _registry[type].ContainsKey(context))
             {
                 return (T)_registry[type][context];
